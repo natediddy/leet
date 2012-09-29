@@ -41,196 +41,413 @@
 #include <string.h>
 #include <time.h>
 
+#define L3WHICHTOK(t) \
+  ((!alpha_only && !numer_only && !punct_only && !combo_only) || t)
+
+static unsigned char alpha_only = 0;
+static unsigned char numer_only = 0;
+static unsigned char punct_only = 0;
+static unsigned char combo_only = 0;
+
 static const struct
 {
-  const char alpha;
-  const char *const *leet;
+  const char letter;
+  const char *const *alpha;
+  const char *const *numer;
+  const char *const *punct;
+  const char *const *combo;
 } l3tab[26] = {
   {
     'a',
-    (const char *const [])
-    {
-      "4", "@", "/-\\", "/\\", "^", "aye", "ci", "Z", NULL
-    }
-  },
-  {
-    'b',
-    (const char *const [])
-    {
-      "8", "|3", "6", "13", "|3", "]3", NULL
-    }
-  },
-  {
-    'c',
-    (const char *const [])
-    {
-      "(", "<", "{", "sea", "see", NULL
-    }
-  },
-  {
-    'd',
-    (const char *const [])
-    {
-      "|)", "[)", "])", "I>", "|>", "0", "cl", NULL
-    }
-  },
-  {
-    'e',
-    (const char *const [])
-    {
-      "3", "&", "[-", NULL
-    }
-  },
-  {
-    'f',
-    (const char *const [])
-    {
-      "|=", "]=", "}", "ph", "(=", NULL
-    }
-  },
-  {
-    'g',
-    (const char *const [])
-    {
-      "6", "9", "&", "(_+", "C-", "gee", "jee", "(y,", "cj", NULL
-    }
-  },
-  {
-    'h',
-    (const char *const [])
-    {
-      "|-|", "#", "]-[", "[-]", ")-(", "(-)", ":-:", "}{", "}-{", "aych", NULL
-    }
-  },
-  {
-    'i',
-    (const char *const [])
-    {
-      "!", "1", "|", "eye", "3y3", "ai", NULL
-    }
-  },
-  {
-    'j',
-    (const char *const [])
-    {
-      "_|", "_/", "]", "</", "_)", NULL
-    }
-  },
-  {
-    'k',
-    (const char *const [])
-    {
-      "X", "|<", "|X", "|{", NULL
-    }
-  },
-  {
-    'l',
-    (const char *const [])
-    {
-      "1", "7", "|_", "|", "1J", NULL
-    }
-  },
-  {
-    'm',
-    (const char *const [])
-    {
-      "44", "/\\/\\", "|\\/|", "em", "|v|", "IYI", "IVI", "[V]", "^^", "nn",
-      "//\\\\//\\\\", "(V)", "(\\/)", "/|\\", "/|/|", ".\\\\", "/^^\\",
-      "/V\\", "|^^|", "AA", NULL
-    }
-  },
-  {
-    'n',
-    (const char *const [])
-    {
-      "|\\|", "/\\/", "//\\\\//", "[\\]", "<\\>", "{\\}", "//", "[]\\[]",
-      "]\\[", "~", NULL
-    }
-  },
-  {
-    'o',
-    (const char *const [])
-    {
-      "0", "()", "oh", "[]", NULL
-    }
-  },
-  {
-    'p',
-    (const char *const [])
-    {
-      "|*", "|o", "|>", "|\"", "?", "9", "[]D", "|7", "q", "|D", NULL
-    }
-  },
-  {
-    'q',
-    (const char *const [])
-    {
-      "0_", "0,", "(,)", "<|", "cue", "9", NULL
-    }
-  },
-  {
-    'r',
-    (const char *const [])
-    {
-      "|2", "2", "/2", "I2", "|^", "|~", "lz", "[z", "|`", "l2", ".-", NULL
-    }
-  },
-  {
-    's',
-    (const char *const [])
-    {
-      "5", "$", "z", "es", NULL
-    }
-  },
-  {
-    't',
-    (const char *const [])
-    {
-      "7", "+", "-|-", "1", "']['", NULL
-    }
-  },
-  {
-    'u',
-    (const char *const [])
-    {
-      "|_|", "(_)", "Y3W", "M", "[_]", "\\_/", "\\_\\", "/_/", NULL
-    }
-  },
-  {
-    'v',
-    (const char *const [])
-    {
-      "\\/", "\\\\//", NULL
-    }
-  },
-  {
-    'w',
-    (const char *const [])
-    {
-      "\\/\\/", "vv", "VV", "'//", "\\\\'", "\\^/", "(n)", "\\X/", "\\x/",
-      "\\|/", "\\_|_/", "\\\\//\\\\//", "\\_:_/", "]I[", "UU", "uu", "JL",
+    (const char *const []) {
+      "aye", "ci", "Z", NULL
+    },
+    (const char *const []) {
+      "4", NULL
+    },
+    (const char *const []) {
+      "@", "/-\\", "/\\", "^", NULL
+    },
+    (const char *const []) {
       NULL
     }
   },
   {
+    'b',
+    (const char *const []) {
+      NULL
+    },
+    (const char *const []) {
+      "8", "6", "13", NULL
+    },
+    (const char *const []) {
+      NULL
+    },
+    (const char *const []) {
+      "|3", "]3", NULL
+    }
+  },
+  {
+    'c',
+    (const char *const []) {
+      "sea", "see", NULL
+    },
+    (const char *const []) {
+      NULL
+    },
+    (const char *const []) {
+      "(", "<", "{", NULL
+    },
+    (const char *const []) {
+      NULL
+    }
+  },
+  {
+    'd',
+    (const char *const []) {
+      "cl", NULL
+    },
+    (const char *const []) {
+      "0", NULL
+    },
+    (const char *const []) {
+      "|)", "[)", "])", "I>", "|>", NULL
+    },
+    (const char *const []) {
+      NULL
+    }
+  },
+  {
+    'e',
+    (const char *const []) {
+      NULL
+    },
+    (const char *const []) {
+      "3", NULL
+    },
+    (const char *const []) {
+      "&", "[-", NULL
+    },
+    (const char *const []) {
+      NULL
+    }
+  },
+  {
+    'f',
+    (const char *const []) {
+      "ph", NULL
+    },
+    (const char *const []) {
+      NULL
+    },
+    (const char *const []) {
+      "|=", "]=", "}", "(=", NULL
+    },
+    (const char *const []) {
+      NULL
+    }
+  },
+  {
+    'g',
+    (const char *const []) {
+      "gee", "jee", "cj", NULL
+    },
+    (const char *const []) {
+      "6", "9", NULL
+    },
+    (const char *const []) {
+      "&", "(_+", "(-", NULL 
+    },
+    (const char *const []) {
+      "C-", "(y,", NULL
+    }
+  },
+  {
+    'h',
+    (const char *const []) {
+      "aych", NULL
+    },
+    (const char *const []) {
+      NULL
+    },
+    (const char *const []) {
+      "|-|", "#", "]-[", "[-]", ")-(", "(-)", ":-:", "}{", "}-{", NULL
+    },
+    (const char *const []) {
+      NULL
+    }
+  },
+  {
+    'i',
+    (const char *const []) {
+      "ai", NULL
+    },
+    (const char *const []) {
+      "1", NULL
+    },
+    (const char *const []) {
+      "!", "|", NULL
+    },
+    (const char *const []) {
+      "3y3", NULL
+    }
+  },
+  {
+    'j',
+    (const char *const []) {
+      NULL
+    },
+    (const char *const []) {
+      NULL
+    },
+    (const char *const []) {
+      "_|", "_/", "]", "</", "_)", NULL
+    },
+    (const char *const []) {
+      NULL
+    }
+  },
+  {
+    'k',
+    (const char *const []) {
+      "X", NULL
+    },
+    (const char *const []) {
+      NULL
+    },
+    (const char *const []) {
+      "|<", "|{", NULL
+    },
+    (const char *const []) {
+      "|X", NULL
+    }
+  },
+  {
+    'l',
+    (const char *const []) {
+      NULL
+    },
+    (const char *const []) {
+      "1", "7", NULL
+    },
+    (const char *const []) {
+      "|_", "|", NULL
+    },
+    (const char *const []) {
+      "1J", NULL
+    }
+  },
+  {
+    'm',
+    (const char *const []) {
+      "em", "IYI", "IVI", "nn", "AA", NULL
+    },
+    (const char *const []) {
+      "44", NULL
+    },
+    (const char *const []) {
+      "/\\/\\", "|\\/|", "^^", "//\\\\//\\\\", "(\\/)", "/|\\", "/|/|",
+      ".\\\\", "/^^\\", "|^^|", NULL
+    },
+    (const char *const []) {
+      "|v|", "[V]", "(V)", "/V\\", NULL
+    }
+  },
+  {
+    'n',
+    (const char *const []) {
+      NULL
+    },
+    (const char *const []) {
+      NULL
+    },
+    (const char *const []) {
+      "|\\|", "/\\/", "//\\\\//", "[\\]", "<\\>", "{\\}", "//", "[]\\[]",
+      "]\\[", "~", NULL
+    },
+    (const char *const []) {
+      NULL
+    }
+  },
+  {
+    'o',
+    (const char *const []) {
+      "oh", NULL
+    },
+    (const char *const []) {
+      "0", NULL
+    },
+    (const char *const []) {
+      "()", "[]", NULL
+    },
+    (const char *const []) {
+      NULL
+    }
+  },
+  {
+    'p',
+    (const char *const []) {
+      "q", NULL
+    },
+    (const char *const []) {
+      "9", NULL
+    },
+    (const char *const []) {
+      "|*", "|>", "|\"", "?", NULL
+    },
+    (const char *const []) {
+      "|o", "[]D", "|7", "|D", NULL
+    }
+  },
+  {
+    'q',
+    (const char *const []) {
+      "cue", NULL
+    },
+    (const char *const []) {
+      "9", NULL
+    },
+    (const char *const []) {
+      "(,)", "<|", NULL
+    },
+    (const char *const []) {
+      "0_", "0,", NULL
+    }
+  },
+  {
+    'r',
+    (const char *const []) {
+      "lz", NULL
+    },
+    (const char *const []) {
+      "2", NULL
+    },
+    (const char *const []) {
+      "|^", "|~", "|`", ".-", NULL
+    },
+    (const char *const []) {
+      "|2", "/2", "I2", "[z", "l2", NULL
+    }
+  },
+  {
+    's',
+    (const char *const []) {
+      "z", "es", NULL
+    },
+    (const char *const []) {
+      "5", NULL
+    },
+    (const char *const []) {
+      "$", NULL
+    },
+    (const char *const []) {
+      NULL
+    }
+  },
+  {
+    't',
+    (const char *const []) {
+      NULL
+    },
+    (const char *const []) {
+      "7", "1", NULL
+    },
+    (const char *const []) {
+      "+", "-|-", "']['", NULL
+    },
+    (const char *const []) {
+      NULL
+    }
+  },
+  {
+    'u',
+    (const char *const []) {
+      "M", NULL
+    },
+    (const char *const []) {
+      NULL
+    },
+    (const char *const []) {
+      "|_|", "(_)", "[_]", "\\_/", "\\_\\", "/_/", NULL
+    },
+    (const char *const []) {
+      "Y3W", NULL
+    },
+  },
+  {
+    'v',
+    (const char *const []) {
+      NULL
+    },
+    (const char *const []) {
+      NULL
+    },
+    (const char *const []) {
+      "\\/", "\\\\//", NULL
+    },
+    (const char *const []) {
+      NULL
+    }
+  },
+  {
+    'w',
+    (const char *const []) {
+      "vv", "VV", "UU", "uu", "JL", NULL
+    },
+    (const char *const []) {
+      NULL
+    },
+    (const char *const []) {
+      "\\/\\/" "'//", "\\\\'", "\\^/", "\\|/", "\\_|_/", "\\\\//\\\\//",
+      "\\_:_/", NULL
+    },
+    (const char *const []) {
+      "(n)", "\\X/", "\\x/", "]I[", NULL
+    }
+  },
+  {
     'x',
-    (const char *const [])
-    {
-      "%", "><", "}{", "ecks", "*", ")(", "ex", NULL
+    (const char *const []) {
+      "ecks", "ex", NULL
+    },
+    (const char *const []) {
+      NULL
+    },
+    (const char *const []) {
+      "%", "><", "}{", "*", ")(", NULL
+    },
+    (const char *const []) {
+      NULL
     }
   },
   {
     'y',
-    (const char *const [])
-    {
-      "j", "`/", "`(", "-/", "'/", NULL
+    (const char *const []) {
+      "j", NULL
+    },
+    (const char *const []) {
+      NULL
+    },
+    (const char *const []) {
+      "`/", "`(", "-/", "'/", NULL
+    },
+    (const char *const []) {
+      NULL
     }
   },
   {
     'z',
-    (const char *const [])
-    {
-      "2", "~/_", "%", "3", "7_", NULL
+    (const char *const []) {
+      NULL
+    },
+    (const char *const []) {
+      "2", "3", NULL
+    },
+    (const char *const []) {
+      "~/_", "%", NULL
+    },
+    (const char *const []) {
+      "7_", NULL
     }
   }
 };
@@ -258,27 +475,53 @@ l3rand (int max)
 }
 
 static int
-l3symcount (const char ch)
+l3tokcnt (int l_index)
 {
-  int i;
+  int i = 0;
 
-  for (i = 0; i < 26; ++i)
-  {
-    if (ch == l3tab[i].alpha)
-    {
-      int j;
-      for (j = 0; l3tab[i].leet[j] != NULL; ++j)
-        ;
-      return j;
-    }
-  }
-  return 0;
+  if (L3WHICHTOK (alpha_only))
+    for (; l3tab[l_index].alpha[i] != NULL; ++i)
+      ;
+  if (L3WHICHTOK (numer_only))
+    for (; l3tab[l_index].numer[i] != NULL; ++i)
+      ;
+  if (L3WHICHTOK (punct_only))
+    for (; l3tab[l_index].punct[i] != NULL; ++i)
+      ;
+  if (L3WHICHTOK (combo_only))
+    for (; l3tab[l_index].combo[i] != NULL; ++i)
+      ;
+  return i;
+}
+
+static const char *
+l3findtok (int l_index, int t_count)
+{
+  int i = 0;
+
+  if (L3WHICHTOK (alpha_only))
+    for (; l3tab[l_index].alpha[i] != NULL; ++i)
+      if (i == t_count)
+        return l3tab[l_index].alpha[i];
+  if (L3WHICHTOK (numer_only))
+    for (; l3tab[l_index].numer[i] != NULL; ++i)
+      if (i == t_count)
+        return l3tab[l_index].numer[i];
+  if (L3WHICHTOK (punct_only))
+    for (; l3tab[l_index].punct[i] != NULL; ++i)
+      if (i == t_count)
+        return l3tab[l_index].punct[i];
+  if (L3WHICHTOK (combo_only))
+    for (; l3tab[l_index].combo[i] != NULL; ++i)
+      if (i == t_count)
+        return l3tab[l_index].combo[i];
+  return NULL;
 }
 
 int
 main (int c, char **v)
 {
-  int i;
+  int i, v_index = 1;
 
   if (c == 1)
   {
@@ -292,6 +535,10 @@ main (int c, char **v)
   {
     fprintf (stdout, "Usage: %s STRING ...\n"
                      "Options:\n"
+                     "  -a, --alpha    Use only alpha tokens\n"
+                     "  -n, --numeric  Use only numerical tokens\n"
+                     "  -s, --symbols  Use only symbols/punctuation\n"
+                     "  -m, --misc     Use only tokens with combinations\n"
                      "  -t, --table    Show table of l337 characters\n"
                      "  -?, -h, --help Show this help message\n"
                      "  -v, --version  Show version information\n", v[0]);
@@ -299,7 +546,7 @@ main (int c, char **v)
   }
   else if (l3streq (v[1], "-v") || l3streq (v[1], "--version"))
   {
-    fputs ("Leeter 1.0\nNathan Forbes\n", stdout);
+    fputs ("leet 1.1\nNathan Forbes\n", stdout);
     return EXIT_SUCCESS;
   }
   else if (l3streq (v[1], "-t") || l3streq (v[1], "--table"))
@@ -307,20 +554,66 @@ main (int c, char **v)
     int i;
     for (i = 0; i < 26; ++i)
     {
-      fprintf (stdout, "%c:\n  ", (char) toupper ((int) l3tab[i].alpha));
+      fprintf (stdout, "%c:", (char) toupper ((int) l3tab[i].letter));
       int j;
-      for (j = 0; l3tab[i].leet[j] != NULL; ++j)
+      fputs ("\n  ALPHA: ", stdout);
+      for (j = 0; l3tab[i].alpha[j] != NULL; ++j)
       {
-        fputs (l3tab[i].leet[j], stdout);
-        if (l3tab[i].leet[j + 1] != NULL)
+        if (j == 0)
+          fputs ("  ", stdout);
+        fputs (l3tab[i].alpha[j], stdout);
+        if (l3tab[i].alpha[j + 1] != NULL)
+          fputs ("  ", stdout);
+      }
+      fputs ("\n  NUMERIC: ", stdout);
+      for (j = 0; l3tab[i].numer[j] != NULL; ++j)
+      {
+        fputs (l3tab[i].numer[j], stdout);
+        if (l3tab[i].numer[j + 1] != NULL)
+          fputs ("  ", stdout);
+      }
+      fputs ("\n  SYMBOLS: ", stdout);
+      for (j = 0; l3tab[i].punct[j] != NULL; ++j)
+      {
+        fputs (l3tab[i].punct[j], stdout);
+        if (l3tab[i].punct[j + 1] != NULL)
+          fputs ("  ", stdout);
+      }
+      fputs ("\n  MISC: ", stdout);
+      for (j = 0; l3tab[i].combo[j] != NULL; ++j)
+      {
+        if (j == 0)
+          fputs ("   ", stdout);
+        fputs (l3tab[i].combo[j], stdout);
+        if (l3tab[i].combo[j + 1] != NULL)
           fputs ("  ", stdout);
       }
       fputc ('\n', stdout);
     }
     return EXIT_SUCCESS;
   }
+  else if (l3streq (v[1], "-a") || l3streq (v[1], "--alpha"))
+  {
+    alpha_only = 1;
+    v_index = 2;
+  }
+  else if (l3streq (v[1], "-n") || l3streq (v[1], "--numeric"))
+  {
+    numer_only = 1;
+    v_index = 2;
+  }
+  else if (l3streq (v[1], "-s") || l3streq (v[1], "--symbols"))
+  {
+    punct_only = 1;
+    v_index = 2;
+  }
+  else if (l3streq (v[1], "-m") || l3streq (v[1], "--misc"))
+  {
+    combo_only = 1;
+    v_index = 2;
+  }
 
-  for (i = 1; v[i]; ++i)
+  for (i = v_index; v[i]; ++i)
   {
     int j, l = strlen (v[i]) * 3, b_index = 0;
     char b[l];
@@ -332,14 +625,22 @@ main (int c, char **v)
         for (k = 0; k < 26; ++k)
         {
           char ch = (char) tolower ((int) v[i][j]);
-          if (ch == l3tab[k].alpha)
+          if (ch == l3tab[k].letter)
           {
-            int n = l3rand (l3symcount (ch)) - 1;
-            if (l3tab[k].leet[n])
+            int tc = l3tokcnt (k);
+            if (tc == 0)
             {
-              int x, y, ll = strlen (l3tab[k].leet[n]);
+              b[b_index] = ch;
+              ++b_index;
+              continue;
+            }
+            int n = l3rand (tc) - 1;
+            const char *tok = l3findtok (k, n);
+            if (tok && *tok)
+            {
+              int x, y, ll = strlen (tok);
               for (x = b_index, y = 0; y < ll; ++x, ++y)
-                b[x] = l3tab[k].leet[n][y];
+                b[x] = tok[y];
               b_index += ll;
             }
           }
